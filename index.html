@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DRS Admin Portal</title>
+<style>
+  :root{
+    --true-red:#ED1C24;
+    --true-red-dark:#B8151B;
+    --bg:#F4F5F7;
+    --card:#FFFFFF;
+    --text:#1C1C1E;
+    --text-sub:#6B7280;
+    --border:#E5E7EB;
+    --green:#16A34A;
+    --green-bg:#F0FDF4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', 'Sarabun', Tahoma, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  header{
+    width:100%;
+    background:linear-gradient(135deg,var(--true-red),var(--true-red-dark));
+    color:#fff;
+    padding:22px 20px 20px;
+    text-align:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.12);
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  header p{
+    margin:4px 0 0;
+    font-size:13px;
+    opacity:0.9;
+  }
+  main{
+    width:100%;
+    max-width:420px;
+    padding:20px 16px 40px;
+    flex:1;
+  }
+  .card{
+    background:var(--card);
+    border-radius:16px;
+    padding:22px 20px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border:1px solid var(--border);
+    margin-bottom:16px;
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:16px;
+    font-weight:700;
+  }
+  .card .sub{
+    margin:0 0 18px;
+    font-size:13px;
+    color:var(--text-sub);
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+    color:var(--text);
+  }
+  input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    font-size:16px;
+    margin-bottom:14px;
+    transition:border-color .15s;
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--true-red);
+  }
+  button{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:opacity .15s, transform .1s;
+  }
+  button:active{ transform:scale(0.98); }
+  .btn-primary{
+    background:var(--true-red);
+    color:#fff;
+  }
+  .btn-primary:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+  }
+  .btn-secondary{
+    background:#fff;
+    color:var(--text);
+    border:1.5px solid var(--border);
+    margin-top:8px;
+  }
+  .btn-danger{
+    background:#DC2626;
+    color:#fff;
+  }
+  .error-msg{
+    background:#FEF2F2;
+    color:#B91C1C;
+    border:1px solid #FECACA;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13px;
+    margin-bottom:14px;
+    display:none;
+  }
+  .success-msg{
+    background:var(--green-bg);
+    color:var(--green);
+    border:1px solid #BBF7D0;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13px;
+    margin-bottom:14px;
+    display:none;
+  }
+  .profile-box{
+    background:var(--bg);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .profile-row{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+  }
+  .profile-row:last-child{ border-bottom:none; }
+  .profile-row .label{ color:var(--text-sub); }
+  .profile-row .value{ font-weight:600; text-align:right; }
+  .totp-badge{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:20px;
+  }
+  .totp-yes{ background:var(--green-bg); color:var(--green); }
+  .totp-no{ background:#F1F5F9; color:var(--text-sub); }
+  .admin-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--card);
+    border-radius:12px;
+    padding:12px 16px;
+    margin-bottom:16px;
+    border:1px solid var(--border);
+    font-size:13px;
+  }
+  .admin-bar .who{ color:var(--text-sub); }
+  .admin-bar .who b{ color:var(--text); }
+  .admin-bar .logout{
+    background:none;
+    border:none;
+    color:var(--true-red);
+    font-weight:700;
+    font-size:13px;
+    width:auto;
+    padding:0;
+  }
+  .hidden{ display:none !important; }
+  .spinner{
+    display:inline-block;
+    width:16px; height:16px;
+    border:2px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+    margin-right:6px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.5);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:100;
+  }
+  .modal{
+    background:#fff;
+    border-radius:16px;
+    padding:22px;
+    max-width:360px;
+    width:100%;
+  }
+  .modal h3{ margin:0 0 8px; font-size:16px; }
+  .modal p{ margin:0 0 18px; font-size:14px; color:var(--text-sub); line-height:1.5; }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{ margin:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔐 DRS Admin Portal</h1>
+  <p>รีเซ็ต TOTP Authenticator ให้พนักงาน</p>
+</header>
+
+<main>
+
+  <!-- ============ LOGIN SCREEN (Step 1: Sale Code) ============ -->
+  <div id="loginStep1">
+    <div class="card">
+      <h2 style="text-align:center;">เข้าสู่ระบบแอดมิน</h2>
+
+      <div class="error-msg" id="loginErrorStep1"></div>
+
+      <label>รหัสพนักงานของแอดมิน (Admin User)</label>
+      <input type="text" id="loginSaleCode" inputmode="numeric" placeholder="เช่น 90009999" autocomplete="off">
+
+      <button class="btn-primary" id="loginStep1Btn" onclick="goToStep2()">ถัดไป</button>
+    </div>
+  </div>
+
+  <!-- ============ LOGIN SCREEN (Step 2: OTP) ============ -->
+  <div id="loginStep2" class="hidden">
+    <div class="card">
+      <h2>ยืนยันตัวตน</h2>
+      <p class="sub">กรอกรหัส OTP จากแอป Authenticator</p>
+
+      <div class="error-msg" id="loginError"></div>
+
+      <label>กรอกรหัส OTP จากแอป Authenticator</label>
+      <input type="text" id="loginTotpCode" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+
+      <button class="btn-primary" id="loginBtn" onclick="doAdminLogin()">เข้าสู่ระบบ</button>
+      <button class="btn-secondary" onclick="backToStep1()">ย้อนกลับ</button>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN TOOL SCREEN ============ -->
+  <div id="adminScreen" class="hidden">
+    <div class="admin-bar">
+      <div class="who">แอดมิน: <b id="adminName">-</b></div>
+      <button class="logout" onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="card">
+      <h2>ค้นหาพนักงาน</h2>
+      <p class="sub">กรอกรหัสพนักงานที่ต้องการรีเซ็ต TOTP</p>
+
+      <div class="error-msg" id="lookupError"></div>
+
+      <label>รหัสพนักงาน (Sale Code)</label>
+      <input type="text" id="targetSaleCode" inputmode="numeric" placeholder="เช่น 123456" autocomplete="off">
+
+      <button class="btn-primary" id="lookupBtn" onclick="doLookup()">ค้นหา</button>
+    </div>
+
+    <div class="card hidden" id="resultCard">
+      <h2>ข้อมูลพนักงาน</h2>
+      <div class="success-msg" id="resetSuccess"></div>
+
+      <div class="profile-box">
+        <div class="profile-row">
+          <span class="label">ชื่อพนักงาน</span>
+          <span class="value" id="pName">-</span>
+        </div>
+        <div class="profile-row">
+          <span class="label">ตำแหน่ง</span>
+          <span class="value" id="pPosition">-</span>
+        </div>
+        <div class="profile-row">
+          <span class="label">ภาค</span>
+          <span class="value" id="pRegion">-</span>
+        </div>
+        <div class="profile-row">
+          <span class="label">จังหวัด</span>
+          <span class="value" id="pProvince">-</span>
+        </div>
+        <div class="profile-row">
+          <span class="label">สถานะ TOTP</span>
+          <span class="value" id="pTotpStatus">-</span>
+        </div>
+      </div>
+
+      <button class="btn-danger" id="resetBtn" onclick="openConfirmModal()">ลบ TOTP_Secret (Reset)</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal">
+    <h3>ยืนยันการรีเซ็ต TOTP</h3>
+    <p>คุณกำลังจะลบ TOTP_Secret ของ <b id="confirmName">-</b> (<span id="confirmSaleCode">-</span>)<br>
+       พนักงานจะต้องตั้งค่า Authenticator App ใหม่ในการ Login ครั้งถัดไป</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeConfirmModal()">ยกเลิก</button>
+      <button class="btn-danger" id="confirmResetBtn" onclick="doReset()">ยืนยันรีเซ็ต</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // TODO: paste your deployed Apps Script Web App /exec URL here
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxaZn_sBH8EtCXCt35Lg0OzRwzVT2Hr05Rf6de--tTmQ-HvKSSMRvd84jeYYB7nsb64fA/exec';
+
+  let session = { saleCode: null, name: null };
+  let currentTarget = null;
+
+  // ---- JSONP helper (fetch() is unreliable in some in-app browsers) ----
+  function jsonpCall(params) {
+    return new Promise((resolve, reject) => {
+      const callbackName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      params.callback = callbackName;
+
+      const query = Object.keys(params)
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+        .join('&');
+
+      const script = document.createElement('script');
+      script.src = SCRIPT_URL + '?' + query;
+
+      window[callbackName] = (data) => {
+        resolve(data);
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.onerror = () => {
+        reject(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ'));
+        delete window[callbackName];
+        script.remove();
+      };
+
+      document.body.appendChild(script);
+    });
+  }
+
+  function showError(elId, msg) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError(elId) {
+    document.getElementById(elId).style.display = 'none';
+  }
+  function setLoading(btnId, loading, label) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="spinner"></span>กำลังโหลด...' : label;
+  }
+
+  // ---------------- Admin Login (2-step) ----------------
+  function goToStep2() {
+    hideError('loginErrorStep1');
+    const saleCode = document.getElementById('loginSaleCode').value.trim();
+    if (!saleCode) {
+      showError('loginErrorStep1', 'กรุณากรอกรหัสพนักงานของแอดมิน');
+      return;
+    }
+    document.getElementById('loginStep1').classList.add('hidden');
+    document.getElementById('loginStep2').classList.remove('hidden');
+    document.getElementById('loginTotpCode').focus();
+  }
+
+  function backToStep1() {
+    hideError('loginError');
+    document.getElementById('loginTotpCode').value = '';
+    document.getElementById('loginStep2').classList.add('hidden');
+    document.getElementById('loginStep1').classList.remove('hidden');
+  }
+
+  async function doAdminLogin() {
+    hideError('loginError');
+    const saleCode = document.getElementById('loginSaleCode').value.trim();
+    const code = document.getElementById('loginTotpCode').value.trim();
+
+    if (!saleCode || !code) {
+      showError('loginError', 'กรุณากรอกรหัส OTP');
+      return;
+    }
+
+    setLoading('loginBtn', true, 'เข้าสู่ระบบ');
+    try {
+      const res = await jsonpCall({ action: 'adminLogin', saleCode, code });
+      if (res.success) {
+        session = { saleCode, name: res.name };
+        document.getElementById('adminName').textContent = res.name + ' (' + res.position + ')';
+        document.getElementById('loginStep1').classList.add('hidden');
+        document.getElementById('loginStep2').classList.add('hidden');
+        document.getElementById('adminScreen').classList.remove('hidden');
+      } else {
+        showError('loginError', res.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      }
+    } catch (err) {
+      showError('loginError', err.message);
+    }
+    setLoading('loginBtn', false, 'เข้าสู่ระบบ');
+  }
+
+  function logout() {
+    session = { saleCode: null, name: null };
+    currentTarget = null;
+    document.getElementById('loginSaleCode').value = '';
+    document.getElementById('loginTotpCode').value = '';
+    document.getElementById('resultCard').classList.add('hidden');
+    document.getElementById('targetSaleCode').value = '';
+    document.getElementById('adminScreen').classList.add('hidden');
+    document.getElementById('loginStep2').classList.add('hidden');
+    document.getElementById('loginStep1').classList.remove('hidden');
+  }
+
+  // ---------------- Lookup target employee ----------------
+  async function doLookup() {
+    hideError('lookupError');
+    document.getElementById('resultCard').classList.add('hidden');
+    document.getElementById('resetSuccess').style.display = 'none';
+
+    const saleCode = document.getElementById('targetSaleCode').value.trim();
+    if (!saleCode) {
+      showError('lookupError', 'กรุณากรอกรหัสพนักงาน');
+      return;
+    }
+
+    setLoading('lookupBtn', true, 'ค้นหา');
+    try {
+      const res = await jsonpCall({ action: 'lookupTarget', saleCode });
+      if (res.success) {
+        currentTarget = res;
+        document.getElementById('pName').textContent = res.name;
+        document.getElementById('pPosition').textContent = res.position;
+        document.getElementById('pRegion').textContent = res.region;
+        document.getElementById('pProvince').textContent = res.province;
+
+        const statusEl = document.getElementById('pTotpStatus');
+        if (res.hasTotp) {
+          statusEl.innerHTML = '<span class="totp-badge totp-yes">ตั้งค่าแล้ว</span>';
+        } else {
+          statusEl.innerHTML = '<span class="totp-badge totp-no">ยังไม่ตั้งค่า</span>';
+        }
+
+        document.getElementById('resultCard').classList.remove('hidden');
+      } else {
+        showError('lookupError', res.message || 'ไม่พบข้อมูล');
+      }
+    } catch (err) {
+      showError('lookupError', err.message);
+    }
+    setLoading('lookupBtn', false, 'ค้นหา');
+  }
+
+  // ---------------- Reset TOTP ----------------
+  function openConfirmModal() {
+    if (!currentTarget) return;
+    document.getElementById('confirmName').textContent = currentTarget.name;
+    document.getElementById('confirmSaleCode').textContent = currentTarget.saleCode;
+    document.getElementById('confirmModal').classList.remove('hidden');
+  }
+  function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+  }
+
+  async function doReset() {
+    if (!currentTarget) return;
+    setLoading('confirmResetBtn', true, 'ยืนยันรีเซ็ต');
+    try {
+      const res = await jsonpCall({ action: 'resetTotp', saleCode: currentTarget.saleCode });
+      closeConfirmModal();
+      if (res.success) {
+        const successEl = document.getElementById('resetSuccess');
+        successEl.textContent = 'ลบ TOTP_Secret ของ ' + res.name + ' เรียบร้อยแล้ว';
+        successEl.style.display = 'block';
+        document.getElementById('pTotpStatus').innerHTML = '<span class="totp-badge totp-no">ยังไม่ตั้งค่า</span>';
+      } else {
+        showError('lookupError', res.message || 'รีเซ็ตไม่สำเร็จ');
+      }
+    } catch (err) {
+      closeConfirmModal();
+      showError('lookupError', err.message);
+    }
+    setLoading('confirmResetBtn', false, 'ยืนยันรีเซ็ต');
+  }
+
+  // Enter key support
+  document.getElementById('loginSaleCode').addEventListener('keydown', e => {
+    if (e.key === 'Enter') goToStep2();
+  });
+  document.getElementById('loginTotpCode').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doAdminLogin();
+  });
+  document.getElementById('targetSaleCode').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLookup();
+  });
+</script>
+
+</body>
+</html>
